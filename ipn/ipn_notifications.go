@@ -22,11 +22,16 @@ type IPNPaymentFees struct {
 // Docs said IPN response is similar to PaymentStatus, but it's not the case
 // And because this struct is used to compare a signature (callback), must be exactly the same
 // Signature will be verified using VerifyRequestSignature method
+// Fields are sorted alphabetically by JSON key to ensure consistent HMAC signature generation
 type IPNPaymentStatus struct {
 	ActuallyPaid       float64        `json:"actually_paid"`
 	ActuallyPaidAtFiat float64        `json:"actually_paid_at_fiat"`
+	BurningPercent     int            `json:"burning_percent"`
+	CreatedAt          string         `json:"created_at"`
 	Fee                IPNPaymentFees `json:"fee"`
 	InvoiceID          int64          `json:"invoice_id"`
+	Network            string         `json:"network"`
+	NetworkPrecision   int            `json:"network_precision"`
 	OrderDescription   string         `json:"order_description"`
 	OrderID            string         `json:"order_id"`
 	OutcomeAmount      float64        `json:"outcome_amount"`
@@ -42,6 +47,8 @@ type IPNPaymentStatus struct {
 	PriceAmount        float64        `json:"price_amount"`
 	PriceCurrency      string         `json:"price_currency"`
 	PurchaseID         string         `json:"purchase_id"`
+	SmartContract      string         `json:"smart_contract"`
+	UpdatedAt          string         `json:"updated_at"`
 }
 
 func VerifyRequestSignature(expectedSignature string, ipnNotificationBody IPNPaymentStatus) error {

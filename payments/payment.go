@@ -53,15 +53,16 @@ type PaymentArgs struct {
 type Payment[T string | int64] struct {
 	PaymentAmount
 
-	ID           T           `json:"payment_id"`
-	InvoiceID    json.Number `json:"invoice_id"`
-	Status       string      `json:"payment_status"`
-	PayAddress   string      `json:"pay_address"`
-	PayinExtraID string      `json:"payin_extra_id"`
-	PayAmount    float64     `json:"pay_amount"`
-	ActuallyPaid float64     `json:"actually_paid"`
-	PayCurrency  string      `json:"pay_currency"`
-	PurchaseID   json.Number `json:"purchase_id"`
+	ID              T           `json:"payment_id"`
+	ParentPaymentID *int64      `json:"parent_payment_id"`
+	InvoiceID       json.Number `json:"invoice_id"`
+	Status          string      `json:"payment_status"`
+	PayAddress      string      `json:"pay_address"`
+	PayinExtraID    string      `json:"payin_extra_id"`
+	PayAmount       float64     `json:"pay_amount"`
+	ActuallyPaid    float64     `json:"actually_paid"`
+	PayCurrency     string      `json:"pay_currency"`
+	PurchaseID      json.Number `json:"purchase_id"`
 
 	OutcomeAmount   float64 `json:"outcome_amount"`
 	OutcomeCurrency string  `json:"outcome_currency"`

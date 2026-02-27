@@ -15,18 +15,21 @@ import (
 type BaseURL string
 
 const (
-	ProductionBaseURL BaseURL = "https://api.nowpayments.io/v1"
-	SandBoxBaseURL            = "https://api-sandbox.nowpayments.io/v1"
+	ProductionBaseURL        BaseURL = "https://api.nowpayments.io/v1"
+	SandBoxBaseURL                   = "https://api-sandbox.nowpayments.io/v1"
+	AccountAPIProductionURL  BaseURL = "https://account-api.nowpayments.io"
+	AccountAPISandBoxURL     BaseURL = "https://account-api-sandbox.nowpayments.io"
 )
 
 // SendParams are parameters needed to build and send an HTTP request to the service
 type SendParams struct {
-	Body      io.Reader
-	Into      interface{}
-	Path      string
-	RouteName string
-	Values    url.Values
-	JWTToken  string
+	Body            io.Reader
+	Into            interface{}
+	Path            string
+	RouteName       string
+	Values          url.Values
+	JWTToken        string
+	BaseURLOverride BaseURL // optional: override the default base URL for this request
 }
 
 type routeAttr struct {
@@ -57,6 +60,7 @@ var routes map[string]routeAttr = map[string]routeAttr{
 	"payment-create":      {http.MethodPost, "/payment"},
 	"payment-status":      {http.MethodGet, "/payment"},
 	"payments-list":       {http.MethodGet, "/payment/"},
+	"payments-by-invoice": {http.MethodGet, "/payments/by-invoice"},
 	"selected-currencies": {http.MethodGet, "/merchant/coins"},
 
 	// Subscription routes
@@ -101,6 +105,15 @@ func UseBaseURL(b BaseURL) {
 	defaultURL = b
 }
 
+// AccountAPIBaseURL returns the Account API base URL corresponding to the current default URL.
+// If the default is sandbox, it returns the sandbox account API URL; otherwise production.
+func AccountAPIBaseURL() BaseURL {
+	if defaultURL == SandBoxBaseURL {
+		return AccountAPISandBoxURL
+	}
+	return AccountAPIProductionURL
+}
+
 // HTTPSend sends to endpoint with an optional request body and get the HTTP response result in into
 func HTTPSend(p *SendParams) error {
 	if p == nil {
@@ -112,7 +125,11 @@ func HTTPSend(p *SendParams) error {
 		return eris.New(fmt.Sprintf("bad route name: empty path for endpoint %q", p.RouteName))
 	}
 
-	u := string(defaultURL) + path
+	base := defaultURL
+	if p.BaseURLOverride != "" {
+		base = p.BaseURLOverride
+	}
+	u := string(base) + path
 	if p.Path != "" {
 		u += "/" + p.Path
 	}

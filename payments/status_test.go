@@ -2,7 +2,6 @@ package payments
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -27,79 +26,33 @@ func TestStatus(t *testing.T) {
 				assert.Nil(s)
 			},
 		},
-		{"authentication ok", "PID",
+		{"ok", "PID",
 			func(c *mocks.HTTPClient) {
-				c.EXPECT().Do(mock.Anything).Call.Return(
-					func(req *http.Request) *http.Response {
-						switch req.URL.Path {
-						case "/v1/auth":
-							return newResponseOK(`{"token":"tok"}`)
-						case "/v1/payment/PID":
-							return newResponseOK(`{"payment_status":"done","pay_amount":10.0}`)
-						default:
-							t.Fatalf("unexpected route call %q", req.URL.Path)
-						}
-						return nil
-					}, nil)
+				resp := newResponseOK(`{"payment_status":"done","pay_amount":10.0,"outcome_amount":9.5,"outcome_currency":"btc","burning_percent":1}`)
+				c.EXPECT().Do(mock.Anything).Run(func(r *http.Request) {
+					assert.Equal("/v1/payment/PID", r.URL.Path, "bad endpoint")
+				}).Return(resp, nil)
 			},
 			func(c *mocks.HTTPClient, s *PaymentStatus, err error) {
 				assert.NoError(err)
 				assert.NotNil(s)
 				assert.Equal(10.0, s.PayAmount)
 				assert.Equal("done", s.Status)
-				c.AssertNumberOfCalls(t, "Do", 2)
-			},
-		},
-		{"authentication call failed", "ID",
-			func(c *mocks.HTTPClient) {
-				c.EXPECT().Do(mock.Anything).Call.Return(
-					func(req *http.Request) *http.Response {
-						switch req.URL.Path {
-						case "/v1/auth":
-							return newResponse(http.StatusForbidden, "")
-						default:
-							t.Fatalf("unexpected route call %q", req.URL.Path)
-						}
-						return nil
-					}, errors.New("bad credentials"))
-			},
-			func(c *mocks.HTTPClient, s *PaymentStatus, err error) {
-				assert.Error(err)
-				assert.Nil(s)
-				assert.Equal("status: auth: bad credentials", err.Error())
+				assert.Equal(9.5, s.OutcomeAmount)
+				assert.Equal("btc", s.OutcomeCurrency)
+				assert.Equal(1, s.BurningPercent)
 				c.AssertNumberOfCalls(t, "Do", 1)
 			},
 		},
-		{"status call failed", "ID",
+		{"api error", "ID",
 			func(c *mocks.HTTPClient) {
-				c.EXPECT().Do(mock.Anything).Call.Return(
-					func(req *http.Request) *http.Response {
-						switch req.URL.Path {
-						case "/v1/auth":
-							return newResponseOK(`{"token":"tok"}`)
-						case "/v1/payment/ID":
-							return newResponse(http.StatusInternalServerError, "")
-						default:
-							return nil
-						}
-					},
-					func(req *http.Request) error {
-						switch req.URL.Path {
-						case "/v1/auth":
-							return nil
-						case "/v1/payment/ID":
-							return errors.New("network error")
-						default:
-							return fmt.Errorf("unexpected route call %q", req.URL.Path)
-						}
-					},
-				)
+				c.EXPECT().Do(mock.Anything).Return(nil, errors.New("network error"))
 			},
 			func(c *mocks.HTTPClient, s *PaymentStatus, err error) {
 				assert.Error(err)
 				assert.Nil(s)
 				assert.Equal("payment-status: network error", err.Error())
-				c.AssertNumberOfCalls(t, "Do", 2)
+				c.AssertNumberOfCalls(t, "Do", 1)
 			},
 		},
 	}
