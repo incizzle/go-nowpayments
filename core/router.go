@@ -15,10 +15,12 @@ import (
 type BaseURL string
 
 const (
-	ProductionBaseURL        BaseURL = "https://api.nowpayments.io/v1"
-	SandBoxBaseURL                   = "https://api-sandbox.nowpayments.io/v1"
-	AccountAPIProductionURL  BaseURL = "https://account-api.nowpayments.io"
-	AccountAPISandBoxURL     BaseURL = "https://account-api-sandbox.nowpayments.io"
+	ProductionBaseURL           BaseURL = "https://api.nowpayments.io/v1"
+	SandBoxBaseURL                      = "https://api-sandbox.nowpayments.io/v1"
+	AccountAPIProductionURL     BaseURL = "https://account-api.nowpayments.io"
+	AccountAPISandBoxURL        BaseURL = "https://account-api-sandbox.nowpayments.io"
+	AccountAPIProductionAuthURL BaseURL = "https://account-api.nowpayments.io/v1"
+	AccountAPISandBoxAuthURL    BaseURL = "https://account-api-sandbox.nowpayments.io/v1"
 )
 
 // SendParams are parameters needed to build and send an HTTP request to the service
@@ -112,6 +114,14 @@ func AccountAPIBaseURL() BaseURL {
 		return AccountAPISandBoxURL
 	}
 	return AccountAPIProductionURL
+}
+
+// AccountAPIAuthURL returns the Account API auth base URL (with /v1 path) corresponding to the current default URL.
+func AccountAPIAuthURL() BaseURL {
+	if defaultURL == SandBoxBaseURL {
+		return AccountAPISandBoxAuthURL
+	}
+	return AccountAPIProductionAuthURL
 }
 
 // HTTPSend sends to endpoint with an optional request body and get the HTTP response result in into

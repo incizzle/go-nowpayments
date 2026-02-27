@@ -49,7 +49,7 @@ func ListByInvoice(invoiceID string, o *ListByInvoiceOption) ([]*Payment[int64],
 		}
 	}
 
-	tok, err := core.Authenticate(config.Login(), config.Password())
+	tok, err := core.Authenticate(config.Login(), config.Password(), core.AccountAPIAuthURL())
 	if err != nil {
 		return nil, eris.Wrap(err, "list-by-invoice")
 	}
